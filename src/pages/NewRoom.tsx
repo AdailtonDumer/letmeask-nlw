@@ -1,12 +1,39 @@
+import { FormEvent, useState } from 'react';
+import {Link, useHistory} from 'react-router-dom'
+
+import { useAuth } from '../hooks/useAuth';
+
 import illustrationImg from '../assets/illustration.svg';
 import logoImg from '../assets/logo.svg';
-import googleIconImg from '../assets/google-icon.svg';
 
 import { Button } from '../components/Button';
 
 import '../styles/auth.scss';
+import { database } from '../services/firebase';
 
-export function NewRoom(){
+export function NewRoom() {
+    const {user} = useAuth();
+    const history = useHistory();
+    const [newRoom, setNewRoom] = useState('');
+
+
+    async function handleCreateNewRoom(e : FormEvent){
+        e.preventDefault();
+        
+        if(newRoom.trim() === '') {
+            return;
+        }
+
+        const roomRef = database.ref('rooms');
+
+        const firebaseRoom = roomRef.push({
+            title: newRoom,
+            authorId : user?.id,
+        });
+
+        history.push(`/rooms/${firebaseRoom.key}`)
+    }
+    
     return (
         <div id="auth">
             <aside>
@@ -18,16 +45,18 @@ export function NewRoom(){
                 <div className="main-container">
                     <img src={logoImg} alt="Letmeask" />
                     <h2>Criar uma nova sala</h2>
-                    <form>
-                        <input 
-                            type="text" 
+                    <form onSubmit={handleCreateNewRoom}>
+                        <input
+                            type="text"
                             placeholder="Nome da sala"
+                            onChange={event => setNewRoom(event.target.value)}
+                            value = {newRoom}
                         />
                         <Button type="submit" >
                             Criar sala
                         </Button>
                     </form>
-                    <p>Quer entrar em uma sala existente? <a href="#">Clique aqui</a></p>
+                    <p>Quer entrar em uma sala existente? <Link to="/">Clique aqui</Link></p>
                 </div>
             </main>
         </div>
